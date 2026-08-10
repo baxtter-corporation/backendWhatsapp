@@ -19,7 +19,6 @@ import {
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
-import { Logger } from '@config/logger.config '@exceptions';
 import { Logger } from '@config/logger.config';
 
 const regex = emojiRegex();
