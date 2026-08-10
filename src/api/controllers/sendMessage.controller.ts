@@ -1,6 +1,7 @@
 import emojiRegex from 'emoji-regex';
 import { isBase64, isURL } from 'class-validator';
 
+import { BadRequestException } from '@exceptions';
 import { InstanceDto } from '@api/dto/instance.dto';
 import {
   SendAudioDto,
@@ -17,9 +18,8 @@ import {
   SendTemplateDto,
   SendTextDto,
 } from '@api/dto/sendMessage.dto';
-import { WAMonitoringService } from '@api/services/monitor.service';
-import { BadRequestException } from '@exceptions';
 import { Logger } from '@config/logger.config';
+import { WAMonitoringService } from '@api/services/monitor.service';
 
 const regex = emojiRegex();
 
