@@ -11,11 +11,14 @@ export class Query<T> {
 
 export class PrismaRepository extends PrismaClient {
   constructor(private readonly configService: ConfigService) {
-    // Pass datasource URL from config to avoid Prisma throwing when env var is missing
-    const dbUri = configService.get<any>('DATABASE')?.CONNECTION?.URI || undefined;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore - PrismaClient accepts a `datasources` option at runtime
-    super({ datasources: { db: { url: dbUri } } });
+    // If DATABASE_CONNECTION_URI is missing at build/runtime, set it from config
+    // before instantiating PrismaClient to avoid runtime P1012 errors.
+    const dbUri = configService.get<any>('DATABASE')?.CONNECTION?.URI;
+    if (dbUri) {
+      process.env.DATABASE_CONNECTION_URI = dbUri;
+    }
+
+    super();
   }
 
   private readonly logger = new Logger('PrismaRepository');
@@ -31,7 +34,7 @@ export class PrismaRepository extends PrismaClient {
       await this.$connect();
       this.logger.info('Repository:Prisma - ON');
     } catch (err) {
-      this.logger.error('Repository:Prisma - connection error', err as any);
+      this.logger.error({ message: 'Repository:Prisma - connection error', error: err as any });
     }
   }
 
@@ -40,7 +43,7 @@ export class PrismaRepository extends PrismaClient {
       await this.$disconnect();
       this.logger.warn('Repository:Prisma - OFF');
     } catch (err) {
-      this.logger.warn('Repository:Prisma - disconnect error', err as any);
+      this.logger.warn({ message: 'Repository:Prisma - disconnect error', error: err as any });
     }
   }
 }
