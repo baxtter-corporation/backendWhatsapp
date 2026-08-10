@@ -29,7 +29,7 @@ function isEmoji(str: string) {
 }
 
 export class SendMessageController {
-  constructor(private readonly waMonitor: WAMonitoringService) {}
+  constructor(private readonly waMonitor: WAMonitoringService) { }
 
   private async getInstance(instanceName: string) {
     let instance = this.waMonitor.waInstances[instanceName];
