@@ -18,6 +18,7 @@ RUN npm ci
 COPY . .
 RUN npm run db:generate || true
 RUN npm run build
+RUN npm prune --production
 
 FROM node:20-bullseye-slim
 
@@ -25,11 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends libatomic1 ca-c
 
 WORKDIR /app
 
-# Install only production dependencies
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
-
-# Copy built artifacts and necessary runtime files
+# Copy built artifacts and production node_modules from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 
