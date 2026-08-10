@@ -99,11 +99,11 @@ export class WAMonitoringService {
     const where =
       instanceNames && instanceNames.length > 0
         ? {
-            name: {
-              in: instanceNames,
-            },
-            clientName,
-          }
+          name: {
+            in: instanceNames,
+          },
+          clientName,
+        }
         : { clientName };
 
     const instances = await this.prismaRepository.instance.findMany({
@@ -272,6 +272,10 @@ export class WAMonitoringService {
       return null;
     }
 
+    // When loading an instance on demand, allow autoConnect so requests
+    // that need a live client don't fail with "Instance not connected".
+    // If the stored connectionStatus is 'open' or 'connecting', the
+    // setInstance call will attempt to connect.
     await this.setInstance(
       {
         instanceId: instanceData.id,
@@ -283,7 +287,7 @@ export class WAMonitoringService {
         ownerJid: instanceData.ownerJid,
         connectionStatus: instanceData.connectionStatus as any,
       },
-      false,
+      true,
     );
 
     return this.waInstances[instanceName];

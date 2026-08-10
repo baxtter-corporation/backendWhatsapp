@@ -29,7 +29,7 @@ function isEmoji(str: string) {
 }
 
 export class SendMessageController {
-  constructor(private readonly waMonitor: WAMonitoringService) {}
+  constructor(private readonly waMonitor: WAMonitoringService) { }
 
   private async getInstance(instanceName: string) {
     let instance = this.waMonitor.waInstances[instanceName];
@@ -48,7 +48,7 @@ export class SendMessageController {
         // If not already connecting, trigger connect
         if (typeof instance.connectToWhatsapp === 'function' && state !== 'connecting') {
           // fire-and-forget but do not await indefinitely
-          void instance.connectToWhatsapp().catch(() => {});
+          void instance.connectToWhatsapp().catch(() => { });
         }
 
         // wait up to 15s for connection to become 'open'
