@@ -16,7 +16,6 @@ import {
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
-import { Logger } from '@config/logger.config';
 import { isBase64, isURL } from 'class-validator';
 import emojiRegex from 'emoji-regex';
 

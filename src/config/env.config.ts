@@ -10,6 +10,7 @@ export type HttpServer = {
   URL: string;
   DISABLE_DOCS: boolean;
   DISABLE_MANAGER: boolean;
+  AUTO_INIT_INSTANCES: boolean;
 };
 
 export type HttpMethods = 'POST' | 'GET' | 'PUT' | 'DELETE';
