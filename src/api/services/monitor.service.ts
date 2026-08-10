@@ -333,7 +333,7 @@ export class WAMonitoringService {
     const status =
       typeof instanceData.connectionStatus === 'string'
         ? instanceData.connectionStatus
-        : instanceData.connectionStatus?.state;
+        : (instanceData.connectionStatus as any)?.state;
 
     if (autoConnect && status !== 'open') {
       this.logger.info(

@@ -2347,7 +2347,7 @@ export class BaileysStartupService extends ChannelStartupService {
     options?: Options,
     isIntegration = false,
   ) {
-    const socketOpen = this.client?.ws?.readyState === 1;
+    const socketOpen = (this.client?.ws as any)?.readyState === 1;
     // Fast-fail when client is not ready to avoid hanging requests
     if (!this.client || !this.connectionStatus || (this.connectionStatus.state !== 'open' && !socketOpen)) {
       this.logger.warn({
