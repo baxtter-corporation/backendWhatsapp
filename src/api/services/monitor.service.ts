@@ -336,11 +336,7 @@ export class WAMonitoringService {
         : (instanceData.connectionStatus as any)?.state;
 
     if (autoConnect && status !== 'open') {
-      this.logger.info(
-        `Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`,
-      );
-      if (typeof instance.connectToWhatsapp === 'function') {
-        await instance.connectToWhatsapp();
+      this.logger.info(`Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`  await instance.connectToWhatsapp();
       }
     } else {
       this.logger.info(
