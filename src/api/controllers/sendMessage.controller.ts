@@ -82,7 +82,7 @@ export class SendMessageController {
     if (!this.isReadyInstance(instance)) {
       if (needsConnect || (!isConnecting && typeof instance.connectToWhatsapp === 'function')) {
         try {
-          void instance.connectToWhatsapp().catch(() => {});
+          void instance.connectToWhatsapp().catch(() => { });
         } catch {
           // ignore
         }
