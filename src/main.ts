@@ -159,9 +159,14 @@ async function bootstrap() {
 
   server.listen(httpServer.PORT, () => logger.log(httpServer.TYPE.toUpperCase() + ' - ON: ' + httpServer.PORT));
 
-  initWA().catch((error) => {
-    logger.error('Error loading instances: ' + error);
-  });
+  const httpServerConfig = configService.get<HttpServer>('SERVER');
+  if (httpServerConfig.AUTO_INIT_INSTANCES) {
+    initWA().catch((error) => {
+      logger.error('Error loading instances: ' + error);
+    });
+  } else {
+    logger.info('Auto initialization of WhatsApp instances is disabled (SERVER_AUTO_INIT_INSTANCES=false)');
+  }
 
   onUnexpectedError();
 }

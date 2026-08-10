@@ -13,7 +13,12 @@ async function getInstance(instanceName: string) {
     if (cacheConf.REDIS.ENABLED && cacheConf.REDIS.SAVE_INSTANCES) {
       const keyExists = await cache.has(instanceName);
 
-      return exists || keyExists;
+      if (exists || keyExists) {
+        return true;
+      }
+
+      const rows = await prismaRepository.instance.findMany({ where: { name: instanceName } });
+      return rows.length > 0;
     }
 
     return exists || (await prismaRepository.instance.findMany({ where: { name: instanceName } })).length > 0;

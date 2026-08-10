@@ -249,6 +249,8 @@ export class BaileysStartupService extends ChannelStartupService {
   private readonly msgRetryCounterCache: CacheStore = new NodeCache();
   private readonly userDevicesCache: CacheStore = new NodeCache({ stdTTL: 300000, useClones: false });
   private endSession = false;
+  private reconnectAttempts = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
   private logBaileys = this.configService.get<Log>('LOG').BAILEYS;
   private eventProcessingQueue: Promise<void> = Promise.resolve();
 
@@ -427,9 +429,48 @@ export class BaileysStartupService extends ChannelStartupService {
       const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
       const codesToNotReconnect = [DisconnectReason.loggedOut, DisconnectReason.forbidden, 402, 406];
       const shouldReconnect = !codesToNotReconnect.includes(statusCode);
+
       if (shouldReconnect) {
-        await this.connectToWhatsapp(this.phoneNumber);
+        // Increment reconnect attempts and apply exponential backoff to avoid churn
+        this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
+        if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
+          this.logger.warn({ action: 'reconnect.max_attempts', instance: this.instance.name, attempts: this.reconnectAttempts });
+
+          // Mark instance as closed and stop trying to reconnect
+          this.sendDataWebhook(Events.STATUS_INSTANCE, {
+            instance: this.instance.name,
+            status: 'closed',
+            disconnectionAt: new Date(),
+            disconnectionReasonCode: statusCode,
+            disconnectionObject: JSON.stringify(lastDisconnect),
+          });
+
+          await this.prismaRepository.instance.update({
+            where: { id: this.instanceId },
+            data: {
+              connectionStatus: 'close',
+              disconnectionAt: new Date(),
+              disconnectionReasonCode: statusCode,
+              disconnectionObject: JSON.stringify(lastDisconnect),
+            },
+          });
+
+          this.eventEmitter.emit('logout.instance', this.instance.name, 'inner');
+          this.client?.ws?.close();
+          try {
+            this.client.end(new Error('Max reconnect attempts reached'));
+          } catch {}
+
+          this.sendDataWebhook(Events.CONNECTION_UPDATE, { instance: this.instance.name, ...this.stateConnection });
+        } else {
+          // Backoff before reconnecting
+          const backoffMs = Math.min(60000, Math.pow(2, this.reconnectAttempts) * 1000);
+          this.logger.info({ action: 'reconnect.backoff', instance: this.instance.name, attempts: this.reconnectAttempts, backoffMs });
+          await delay(backoffMs);
+          await this.connectToWhatsapp(this.phoneNumber);
+        }
       } else {
+        this.reconnectAttempts = 0;
         this.sendDataWebhook(Events.STATUS_INSTANCE, {
           instance: this.instance.name,
           status: 'closed',
@@ -2292,6 +2333,11 @@ export class BaileysStartupService extends ChannelStartupService {
     options?: Options,
     isIntegration = false,
   ) {
+    // Fast-fail when client is not ready to avoid hanging requests
+    if (!this.client || !this.connectionStatus || this.connectionStatus.state !== 'open') {
+      this.logger.warn({ action: 'sendMessage.client_not_ready', instance: this.instance.name, state: this.connectionStatus });
+      throw new BadRequestException('Instance not connected');
+    }
     const isWA = (await this.whatsappNumber({ numbers: [number] }))?.shift();
 
     if (!isWA.exists && !isJidGroup(isWA.jid) && !isWA.jid.includes('@broadcast')) {

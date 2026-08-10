@@ -34,7 +34,6 @@ This document provides comprehensive guidelines for AI agents (Claude, GPT, Curs
 ### Build & Deployment
 - **`dist/`** – Build output (do not edit directly)
 - **`public/`** – Static assets and media files
-- **`Docker*`**, **`docker-compose*.yaml`** – Containerization and local development stack
 
 ## Build, Test, and Development Commands
 

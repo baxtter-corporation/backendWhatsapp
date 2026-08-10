@@ -262,6 +262,33 @@ export class WAMonitoringService {
     }
   }
 
+  public async loadInstanceByName(instanceName: string) {
+    if (this.waInstances[instanceName]) {
+      return this.waInstances[instanceName];
+    }
+
+    const instanceData = await this.prismaRepository.instance.findUnique({ where: { name: instanceName } });
+    if (!instanceData) {
+      return null;
+    }
+
+    await this.setInstance(
+      {
+        instanceId: instanceData.id,
+        instanceName: instanceData.name,
+        integration: instanceData.integration,
+        token: instanceData.token,
+        number: instanceData.number,
+        businessId: instanceData.businessId,
+        ownerJid: instanceData.ownerJid,
+        connectionStatus: instanceData.connectionStatus as any,
+      },
+      false,
+    );
+
+    return this.waInstances[instanceName];
+  }
+
   public deleteInstance(instanceName: string) {
     try {
       this.eventEmitter.emit('remove.instance', instanceName, 'inner');
@@ -270,7 +297,7 @@ export class WAMonitoringService {
     }
   }
 
-  private async setInstance(instanceData: InstanceDto) {
+  private async setInstance(instanceData: InstanceDto, autoConnect = true) {
     const instance = channelController.init(instanceData, {
       configService: this.configService,
       eventEmitter: this.eventEmitter,
@@ -293,7 +320,7 @@ export class WAMonitoringService {
       ownerJid: instanceData.ownerJid,
     });
 
-    if (instanceData.connectionStatus === 'open' || instanceData.connectionStatus === 'connecting') {
+    if (autoConnect && (instanceData.connectionStatus === 'open' || instanceData.connectionStatus === 'connecting')) {
       this.logger.info(
         `Auto-connecting instance "${instanceData.instanceName}" (status: ${instanceData.connectionStatus})`,
       );

@@ -266,9 +266,9 @@ export const contactMessageSchema: JSONSchema7 = {
           fullName: { type: 'string' },
           wuid: {
             type: 'string',
-            minLength: 10,
-            pattern: '\\d+',
-            description: '"wuid" must be a numeric string',
+            minLength: 3,
+            pattern: '^\\d+(@.*)?$',
+            description: '"wuid" must be a numeric string or full JID (e.g. 123456789@s.whatsapp.net)',
           },
           phoneNumber: { type: 'string', minLength: 10 },
           organization: { type: 'string' },
