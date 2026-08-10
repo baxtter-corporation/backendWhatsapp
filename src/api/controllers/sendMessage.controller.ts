@@ -1,5 +1,5 @@
-import emojiRegex from 'emoji-regex';
 import { isBase64, isURL } from 'class-validator';
+import emojiRegex from 'emoji-regex';
 
 import { InstanceDto } from '@api/dto/instance.dto';
 import {
@@ -31,7 +31,7 @@ function isEmoji(str: string) {
 }
 
 export class SendMessageController {
-  constructor(private readonly waMonitor: WAMonitoringService) {}
+  constructor(private readonly waMonitor: WAMonitoringService) { }
 
   private readonly logger = new Logger('SendMessageController');
 
@@ -83,7 +83,7 @@ export class SendMessageController {
     if (!this.isReadyInstance(instance)) {
       if (needsConnect || (!isConnecting && typeof instance.connectToWhatsapp === 'function')) {
         try {
-          void instance.connectToWhatsapp().catch(() => {});
+          void instance.connectToWhatsapp().catch(() => { });
         } catch {
           // ignore
         }
