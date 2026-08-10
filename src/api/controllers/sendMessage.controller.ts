@@ -41,6 +41,41 @@ export class SendMessageController {
       throw new BadRequestException(`The "${instanceName}" instance is not connected`);
     }
 
+    // If instance exists but client is not ready, try to connect on-demand
+    try {
+      const state = instance.connectionStatus?.state;
+      if (!instance.client || !state || state !== 'open') {
+        // If not already connecting, trigger connect
+        if (typeof instance.connectToWhatsapp === 'function' && state !== 'connecting') {
+          // fire-and-forget but do not await indefinitely
+          void instance.connectToWhatsapp().catch(() => {});
+        }
+
+        // wait up to 15s for connection to become 'open'
+        const connected = await new Promise<boolean>((resolve) => {
+          const timeout = setTimeout(() => {
+            clearInterval(interval);
+            resolve(false);
+          }, 15000);
+
+          const interval = setInterval(() => {
+            const s = instance.connectionStatus?.state;
+            if (s === 'open') {
+              clearTimeout(timeout);
+              clearInterval(interval);
+              resolve(true);
+            }
+          }, 500);
+        });
+
+        if (!connected) {
+          throw new BadRequestException(`The "${instanceName}" instance is not connected`);
+        }
+      }
+    } catch (err) {
+      throw new BadRequestException(`The "${instanceName}" instance is not connected`);
+    }
+
     return instance;
   }
 
