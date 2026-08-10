@@ -77,7 +77,6 @@ body:
         - Windows
         - Linux
         - Mac
-        - Docker
         - Outro
     validations:
       required: true

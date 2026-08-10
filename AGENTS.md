@@ -80,14 +80,7 @@ npm run db:deploy:win  # Windows
 npm run db:studio      # Open Prisma Studio
 ```
 
-### Docker Development
-```bash
-# Start local services (Redis, PostgreSQL, etc.)
-docker-compose up -d
-
-# Full development stack
-docker-compose -f docker-compose.dev.yaml up -d
-```
+<!-- Docker-related development instructions removed. Use local services or cloud infrastructure as needed. -->
 
 ## Coding Standards & Architecture Patterns
 
