@@ -262,6 +262,16 @@ export class WAMonitoringService {
     }
   }
 
+  private normalizeConnectionStatus(connectionStatus: any) {
+    if (!connectionStatus) {
+      return { state: 'close' };
+    }
+    if (typeof connectionStatus === 'string') {
+      return { state: connectionStatus };
+    }
+    return connectionStatus;
+  }
+
   public async loadInstanceByName(instanceName: string) {
     if (this.waInstances[instanceName]) {
       return this.waInstances[instanceName];
@@ -272,10 +282,6 @@ export class WAMonitoringService {
       return null;
     }
 
-    // When loading an instance on demand, allow autoConnect so requests
-    // that need a live client don't fail with "Instance not connected".
-    // If the stored connectionStatus is 'open' or 'connecting', the
-    // setInstance call will attempt to connect.
     await this.setInstance(
       {
         instanceId: instanceData.id,
@@ -285,7 +291,7 @@ export class WAMonitoringService {
         number: instanceData.number,
         businessId: instanceData.businessId,
         ownerJid: instanceData.ownerJid,
-        connectionStatus: instanceData.connectionStatus as any,
+        connectionStatus: this.normalizeConnectionStatus(instanceData.connectionStatus),
       },
       true,
     );
@@ -324,14 +330,21 @@ export class WAMonitoringService {
       ownerJid: instanceData.ownerJid,
     });
 
-    if (autoConnect && (instanceData.connectionStatus === 'open' || instanceData.connectionStatus === 'connecting')) {
+    const status =
+      typeof instanceData.connectionStatus === 'string'
+        ? instanceData.connectionStatus
+        : instanceData.connectionStatus?.state;
+
+    if (autoConnect && status !== 'open') {
       this.logger.info(
-        `Auto-connecting instance "${instanceData.instanceName}" (status: ${instanceData.connectionStatus})`,
+        `Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`,
       );
-      await instance.connectToWhatsapp();
+      if (typeof instance.connectToWhatsapp === 'function') {
+        await instance.connectToWhatsapp();
+      }
     } else {
       this.logger.info(
-        `Skipping auto-connect for instance "${instanceData.instanceName}" (status: ${instanceData.connectionStatus || 'close'})`,
+        `Skipping auto-connect for instance "${instanceData.instanceName}" (status: ${status || 'close'})`,
       );
     }
 
