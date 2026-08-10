@@ -1,6 +1,3 @@
-import { isBase64, isURL } from 'class-validator';
-import emojiRegex from 'emoji-regex';
-
 import { InstanceDto } from '@api/dto/instance.dto';
 import {
   SendAudioDto,
@@ -20,6 +17,8 @@ import {
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { Logger } from '@config/logger.config';
 import { BadRequestException } from '@exceptions';
+import { isBase64, isURL } from 'class-validator';
+import emojiRegex from 'emoji-regex';
 
 const regex = emojiRegex();
 
