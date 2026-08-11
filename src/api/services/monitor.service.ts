@@ -335,7 +335,8 @@ export class WAMonitoringService {
         ? instanceData.connectionStatus
         : (instanceData.connectionStatus as any)?.state;
 
-    if (autoConnect && status !== 'open') {
+    const shouldConnect = autoConnect && (status !== 'open' || !instance.client);
+    if (shouldConnect) {
       this.logger.info(`Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`);
       if (typeof instance.connectToWhatsapp === 'function') {
         await instance.connectToWhatsapp();
