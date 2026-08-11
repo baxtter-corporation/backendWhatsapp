@@ -412,10 +412,14 @@ export class BaileysStartupService extends ChannelStartupService {
         ),
       );
 
-      await this.prismaRepository.instance.update({
-        where: { id: this.instanceId },
-        data: { connectionStatus: 'connecting' },
-      });
+      try {
+        await this.prismaRepository.instance.update({
+          where: { id: this.instanceId },
+          data: { connectionStatus: 'connecting' },
+        });
+      } catch (error) {
+        this.logger.warn(`Failed to update instance status: ${error?.message}`);
+      }
     }
 
     if (connection) {
@@ -457,15 +461,19 @@ export class BaileysStartupService extends ChannelStartupService {
             disconnectionObject: JSON.stringify(lastDisconnect),
           });
 
-          await this.prismaRepository.instance.update({
-            where: { id: this.instanceId },
-            data: {
-              connectionStatus: 'close',
-              disconnectionAt: new Date(),
-              disconnectionReasonCode: statusCode,
-              disconnectionObject: JSON.stringify(lastDisconnect),
-            },
-          });
+          try {
+            await this.prismaRepository.instance.update({
+              where: { id: this.instanceId },
+              data: {
+                connectionStatus: 'close',
+                disconnectionAt: new Date(),
+                disconnectionReasonCode: statusCode,
+                disconnectionObject: JSON.stringify(lastDisconnect),
+              },
+            });
+          } catch (error) {
+            this.logger.warn(`Failed to update instance status: ${error?.message}`);
+          }
 
           this.eventEmitter.emit('logout.instance', this.instance.name, 'inner');
           return;
@@ -489,15 +497,19 @@ export class BaileysStartupService extends ChannelStartupService {
             disconnectionObject: JSON.stringify(lastDisconnect),
           });
 
-          await this.prismaRepository.instance.update({
-            where: { id: this.instanceId },
-            data: {
-              connectionStatus: 'close',
-              disconnectionAt: new Date(),
-              disconnectionReasonCode: statusCode,
-              disconnectionObject: JSON.stringify(lastDisconnect),
-            },
-          });
+          try {
+            await this.prismaRepository.instance.update({
+              where: { id: this.instanceId },
+              data: {
+                connectionStatus: 'close',
+                disconnectionAt: new Date(),
+                disconnectionReasonCode: statusCode,
+                disconnectionObject: JSON.stringify(lastDisconnect),
+              },
+            });
+          } catch (error) {
+            this.logger.warn(`Failed to update instance status: ${error?.message}`);
+          }
 
           this.eventEmitter.emit('logout.instance', this.instance.name, 'inner');
           this.client?.ws?.close();
@@ -533,15 +545,19 @@ export class BaileysStartupService extends ChannelStartupService {
           disconnectionObject: JSON.stringify(lastDisconnect),
         });
 
-        await this.prismaRepository.instance.update({
-          where: { id: this.instanceId },
-          data: {
-            connectionStatus: 'close',
-            disconnectionAt: new Date(),
-            disconnectionReasonCode: statusCode,
-            disconnectionObject: JSON.stringify(lastDisconnect),
-          },
-        });
+        try {
+          await this.prismaRepository.instance.update({
+            where: { id: this.instanceId },
+            data: {
+              connectionStatus: 'close',
+              disconnectionAt: new Date(),
+              disconnectionReasonCode: statusCode,
+              disconnectionObject: JSON.stringify(lastDisconnect),
+            },
+          });
+        } catch (error) {
+          this.logger.warn(`Failed to update instance status: ${error?.message}`);
+        }
 
         if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
           this.chatwootService.eventWhatsapp(
@@ -582,15 +598,19 @@ export class BaileysStartupService extends ChannelStartupService {
       `,
       );
 
-      await this.prismaRepository.instance.update({
-        where: { id: this.instanceId },
-        data: {
-          ownerJid: this.instance.wuid,
-          profileName: (await this.getProfileName()) as string,
-          profilePicUrl: this.instance.profilePictureUrl,
-          connectionStatus: 'open',
-        },
-      });
+      try {
+        await this.prismaRepository.instance.update({
+          where: { id: this.instanceId },
+          data: {
+            ownerJid: this.instance.wuid,
+            profileName: (await this.getProfileName()) as string,
+            profilePicUrl: this.instance.profilePictureUrl,
+            connectionStatus: 'open',
+          },
+        });
+      } catch (error) {
+        this.logger.warn(`Failed to update instance status: ${error?.message}`);
+      }
 
       if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
         this.chatwootService.eventWhatsapp(
