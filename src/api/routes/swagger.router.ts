@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import fs from 'fs';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 
 const router = Router();
 
@@ -194,14 +195,6 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
 
   // sendTemplate (card)
   msgPaths['/message/sendTemplate/{instanceName}'] = {
-    get: {
-      tags: ['Message'],
-      summary: 'Query templates available (informational)',
-      operationId: 'getSendTemplate',
-      parameters: [instanceParam],
-      security: [{ ApiKeyAuth: [] }],
-      responses: { '200': { description: 'OK' } },
-    },
     post: {
       tags: ['Message'],
       summary: 'Send template message',
@@ -227,14 +220,6 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
 
   // sendButtons (card)
   msgPaths['/message/sendButtons/{instanceName}'] = {
-    get: {
-      tags: ['Message'],
-      summary: 'Query button message templates (informational)',
-      operationId: 'getSendButtons',
-      parameters: [instanceParam],
-      security: [{ ApiKeyAuth: [] }],
-      responses: { '200': { description: 'OK' } },
-    },
     post: {
       tags: ['Message'],
       summary: 'Send buttons message',
@@ -269,14 +254,6 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
 
   // sendList (card)
   msgPaths['/message/sendList/{instanceName}'] = {
-    get: {
-      tags: ['Message'],
-      summary: 'Query list message templates (informational)',
-      operationId: 'getSendList',
-      parameters: [instanceParam],
-      security: [{ ApiKeyAuth: [] }],
-      responses: { '200': { description: 'OK' } },
-    },
     post: {
       tags: ['Message'],
       summary: 'Send list message',
@@ -315,28 +292,6 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
   res.json(spec);
 });
 
-router.get('/docs', async (_req: Request, res: Response) => {
-  const html = `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Evolution API Docs</title>
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
-  </head>
-  <body>
-    <div id="swagger-ui"></div>
-    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-    <script>
-      const ui = SwaggerUIBundle({
-        url: '/swagger.json',
-        dom_id: '#swagger-ui',
-      });
-    </script>
-  </body>
-</html>`;
-
-  res.setHeader('Content-Type', 'text/html');
-  res.send(html);
-});
+router.use('/docs', swaggerUi.serve, swaggerUi.setup(null, { swaggerUrl: '/swagger.json' }));
 
 export default router;
