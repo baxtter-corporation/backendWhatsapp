@@ -5229,7 +5229,14 @@ export class BaileysStartupService extends ChannelStartupService {
       return message;
     });
 
-    return { messages: formattedMessages, count };
+    return {
+      messages: {
+        total: count,
+        pages: Math.ceil(count / query.offset),
+        currentPage: query.page,
+        records: formattedMessages,
+      },
+    };
   }
 
   public async findMessagesByRemoteJid(remoteJid: string) {
