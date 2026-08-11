@@ -339,7 +339,11 @@ export class WAMonitoringService {
     if (shouldConnect) {
       this.logger.info(`Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`);
       if (typeof instance.connectToWhatsapp === 'function') {
-        await instance.connectToWhatsapp();
+        void instance.connectToWhatsapp().catch((error) => {
+          this.logger.error(
+            `Auto-connect failed for instance "${instanceData.instanceName}": ${error?.message ?? error}`,
+          );
+        });
       }
     } else {
       this.logger.info(

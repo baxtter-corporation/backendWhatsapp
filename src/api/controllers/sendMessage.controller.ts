@@ -81,16 +81,21 @@ export class SendMessageController {
 
     if (!this.isReadyInstance(instance)) {
       if (needsConnect || (!isConnecting && typeof instance.connectToWhatsapp === 'function')) {
-        try {
-          void instance.connectToWhatsapp().catch(() => { });
-        } catch {
-          // ignore
-        }
+        void instance.connectToWhatsapp().catch((error) => {
+          this.logger.warn(
+            `Instance "${instanceName}" connectToWhatsapp async failed: ${error?.message ?? error}`,
+          );
+        });
       }
 
-      const connected = await this.waitForOpen(instance, waitTimeout);
-      if (!connected) {
-        this.logger.warn(`Instance "${instanceName}" not opened after connect attempt, current state=${state}`);
+      if (isConnecting) {
+        const connected = await this.waitForOpen(instance, waitTimeout);
+        if (!connected) {
+          this.logger.warn(`Instance "${instanceName}" not opened after connect attempt, current state=${state}`);
+          throw new BadRequestException(`The "${instanceName}" instance is not connected`);
+        }
+      } else {
+        this.logger.warn(`Instance "${instanceName}" is not ready and will not wait for open (state=${state})`);
         throw new BadRequestException(`The "${instanceName}" instance is not connected`);
       }
     }
