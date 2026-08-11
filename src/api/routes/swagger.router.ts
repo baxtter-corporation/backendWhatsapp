@@ -8,27 +8,29 @@ function parsePrismaModels(schemaPath: string) {
   try {
     const content = fs.readFileSync(schemaPath, 'utf8');
     const models: Array<{ name: string; fields: Array<{ name: string; type: string; required: boolean }> }> = [];
-    let m;
     const all = content.matchAll(/model\s+(\w+)\s*{([\s\S]*?)\n}/gim);
     for (const mm of all) {
       const name = mm[1];
       const body = mm[2];
       const fields: Array<{ name: string; type: string; required: boolean }> = [];
-      const lines = body.split(/\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('//'));
+      const lines = body
+        .split(/\n/)
+        .map((l) => l.trim())
+        .filter((l) => l && !l.startsWith('//'));
       for (const line of lines) {
         // match: fieldName  Type?  @attr
-        const fld = line.match(/^(\w+)\s+([\w\[\]\?]+).*/);
+        const fld = line.match(/^(\w+)\s+([^\s]+).*/);
         if (!fld) continue;
         const fname = fld[1];
         let ftype = fld[2];
         const required = !ftype.endsWith('?');
-        ftype = ftype.replace(/\?|\[\]/g, '');
+        ftype = ftype.replace('?', '').replace('[]', '');
         fields.push({ name: fname, type: ftype, required });
       }
       models.push({ name, fields });
     }
     return models;
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -120,7 +122,10 @@ function buildOpenApi(models: any[]) {
         },
       },
       responses: {
-        '201': { description: 'Created', content: { 'application/json': { schema: { $ref: `#/components/schemas/${name}` } } } },
+        '201': {
+          description: 'Created',
+          content: { 'application/json': { schema: { $ref: `#/components/schemas/${name}` } } },
+        },
       },
     };
   }
@@ -258,7 +263,11 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
               },
               required: ['number', 'title', 'buttons'],
             },
-            example: { number: '5511999999999', title: 'Opções', buttons: [{ type: 'reply', displayText: 'Sim', id: 'yes' }] },
+            example: {
+              number: '5511999999999',
+              title: 'Opções',
+              buttons: [{ type: 'reply', displayText: 'Sim', id: 'yes' }],
+            },
           },
         },
       },
@@ -296,7 +305,12 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
               },
               required: ['number', 'title', 'buttonText', 'sections'],
             },
-            example: { number: '5511999999999', title: 'Escolha', buttonText: 'Abrir', sections: [{ title: 'Sec', rows: [{ title: 'Item', rowId: '1' }] }] },
+            example: {
+              number: '5511999999999',
+              title: 'Escolha',
+              buttonText: 'Abrir',
+              sections: [{ title: 'Sec', rows: [{ title: 'Item', rowId: '1' }] }],
+            },
           },
         },
       },

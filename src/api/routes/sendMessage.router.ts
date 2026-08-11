@@ -182,6 +182,14 @@ export class MessageRouter extends RouterBroker {
 
         return res.status(HttpStatus.CREATED).json(response);
       });
+
+    // Helpful GET for browser/testing: explain POST usage (prevents "Cannot GET /..." browser errors)
+    this.router.get(this.routerPath('sendText'), async (req, res) => {
+      return res.status(HttpStatus.OK).json({
+        status: HttpStatus.OK,
+        message: 'Use POST to send a text message. POST body: { number: string, text: string }',
+      });
+    });
   }
 
   public readonly router: Router = Router();

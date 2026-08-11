@@ -30,7 +30,7 @@ function isEmoji(str: string) {
 }
 
 export class SendMessageController {
-  constructor(private readonly waMonitor: WAMonitoringService) { }
+  constructor(private readonly waMonitor: WAMonitoringService) {}
 
   private readonly logger = new Logger('SendMessageController');
 
@@ -80,22 +80,20 @@ export class SendMessageController {
     const waitTimeout = isConnecting ? 30000 : 15000;
 
     if (!this.isReadyInstance(instance)) {
-      if (needsConnect || (!isConnecting && typeof instance.connectToWhatsapp === 'function')) {
-        void instance.connectToWhatsapp().catch((error) => {
-          this.logger.warn(
-            `Instance "${instanceName}" connectToWhatsapp async failed: ${error?.message ?? error}`,
-          );
-        });
-      }
+      if (typeof instance.connectToWhatsapp === 'function') {
+        try {
+          await instance.connectToWhatsapp();
+        } catch (error) {
+          this.logger.warn(`Instance "${instanceName}" connectToWhatsapp failed: ${error?.message ?? error}`);
+        }
 
-      if (isConnecting) {
         const connected = await this.waitForOpen(instance, waitTimeout);
         if (!connected) {
           this.logger.warn(`Instance "${instanceName}" not opened after connect attempt, current state=${state}`);
           throw new BadRequestException(`The "${instanceName}" instance is not connected`);
         }
       } else {
-        this.logger.warn(`Instance "${instanceName}" is not ready and will not wait for open (state=${state})`);
+        this.logger.warn(`Instance "${instanceName}" is not ready and has no connectToWhatsapp function (state=${state})`);
         throw new BadRequestException(`The "${instanceName}" instance is not connected`);
       }
     }

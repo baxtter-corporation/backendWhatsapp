@@ -1,5 +1,5 @@
-import { Router, Request, Response, RequestHandler } from 'express';
 import { prismaRepository } from '@api/server.module';
+import { Request, RequestHandler, Response, Router } from 'express';
 
 function lowerFirst(s: string) {
   if (!s) return s;
