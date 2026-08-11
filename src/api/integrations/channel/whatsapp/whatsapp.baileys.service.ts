@@ -84,7 +84,7 @@ import { createJid } from '@utils/createJid';
 import { fetchLatestWaWebVersion } from '@utils/fetchLatestWaWebVersion';
 import { makeProxyAgent, makeProxyAgentUndici } from '@utils/makeProxyAgent';
 import { getOnWhatsappCache, saveOnWhatsappCache } from '@utils/onWhatsappCache';
-import { status } from '@utils/renderStatus';
+import { getStatus, status } from '@utils/renderStatus';
 import { sendTelemetry } from '@utils/sendTelemetry';
 import useMultiFileAuthStatePrisma from '@utils/use-multi-file-auth-state-prisma';
 import { AuthStateProvider } from '@utils/use-multi-file-auth-state-provider-files';
@@ -748,9 +748,9 @@ export class BaileysStartupService extends ChannelStartupService {
       retryRequestDelayMs: 350,
       maxMsgRetryCount: 4,
       fireInitQueries: false,
-      connectTimeoutMs: 30_000,
+      connectTimeoutMs: 60_000,
       keepAliveIntervalMs: 30_000,
-      qrTimeout: 45_000,
+      qrTimeout: 60_000,
       emitOwnEvents: false,
       shouldIgnoreJid: (jid) => {
         if (this.localSettings.syncFullHistory && isJidGroup(jid)) {
@@ -1682,7 +1682,7 @@ export class BaileysStartupService extends ChannelStartupService {
           await this.baileysCache.set(updateKey, secondsSinceEpoch, 30 * 60);
         }
 
-        if (status[update.status] === 'READ' && key.fromMe) {
+        if (getStatus(update.status) === 'READ' && key.fromMe) {
           if (this.configService.get<Chatwoot>('CHATWOOT').ENABLED && this.localChatwoot?.enabled) {
             this.chatwootService.eventWhatsapp(
               'messages.read',
@@ -1711,7 +1711,7 @@ export class BaileysStartupService extends ChannelStartupService {
             remoteJid: key?.remoteJid,
             fromMe: key.fromMe,
             participant: key?.participant,
-            status: status[update.status] ?? 'SERVER_ACK',
+            status: getStatus(update.status),
             pollUpdates,
             instanceId: this.instanceId,
           };
@@ -1765,7 +1765,7 @@ export class BaileysStartupService extends ChannelStartupService {
             continue;
           }
 
-          if (findMessage && update.status !== undefined && status[update.status] !== findMessage.status) {
+          if (findMessage && update.status !== undefined && getStatus(update.status) !== findMessage.status) {
             if (!key.fromMe && key.remoteJid) {
               readChatToUpdate[key.remoteJid] = true;
 
@@ -1777,7 +1777,7 @@ export class BaileysStartupService extends ChannelStartupService {
               const cachedTimestamp = await this.baileysCache.get(messageKey);
 
               if (!cachedTimestamp) {
-                if (status[update.status] === status[4]) {
+                if (getStatus(update.status) === 'READ') {
                   this.logger.log(`Update as read in message.update ${remoteJid} - ${timestamp}`);
                   await this.updateMessagesReadedByTimestamp(remoteJid, timestamp);
                   await this.baileysCache.set(messageKey, true, this.MESSAGE_CACHE_TTL_SECONDS);
@@ -1785,7 +1785,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
                 await this.prismaRepository.message.update({
                   where: { id: findMessage.id },
-                  data: { status: status[update.status] },
+                  data: { status: getStatus(update.status) },
                 });
               } else {
                 this.logger.info(
