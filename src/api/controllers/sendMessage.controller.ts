@@ -76,7 +76,7 @@ export class SendMessageController {
 
     const state = instance.connectionStatus?.state;
     const isConnecting = state === 'connecting';
-    const waitTimeout = isConnecting ? 30000 : 15000;
+    const waitTimeout = isConnecting ? 60000 : 30000;
 
     if (!this.isReadyInstance(instance)) {
       if (typeof instance.connectToWhatsapp === 'function') {
