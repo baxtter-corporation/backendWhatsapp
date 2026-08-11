@@ -40,7 +40,7 @@ enum HttpStatus {
 const router: Router = Router();
 const serverConfig = configService.get('SERVER');
 const databaseConfig = configService.get<Database>('DATABASE');
-const guards = [instanceExistsGuard, instanceLoggedGuard, authGuard['apikey']];
+const guards = [authGuard['apikey'], instanceExistsGuard, instanceLoggedGuard];
 
 const telemetry = new Telemetry();
 

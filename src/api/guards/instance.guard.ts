@@ -1,27 +1,32 @@
 import { InstanceDto } from '@api/dto/instance.dto';
 import { cache, prismaRepository, waMonitor } from '@api/server.module';
-import { CacheConf, configService } from '@config/env.config';
+import { Auth, CacheConf, configService } from '@config/env.config';
 import { BadRequestException, ForbiddenException, InternalServerErrorException, NotFoundException } from '@exceptions';
 import { NextFunction, Request, Response } from 'express';
 
-async function getInstance(instanceName: string) {
+async function getInstance(instanceName: string, apiKey?: string) {
   try {
     const cacheConf = configService.get<CacheConf>('CACHE');
-
+    const env = configService.get<Auth>('AUTHENTICATION').API_KEY;
     const exists = !!waMonitor.waInstances[instanceName];
+
+    if (apiKey && env.KEY === apiKey) {
+      return exists || (cacheConf.REDIS.ENABLED && cacheConf.REDIS.SAVE_INSTANCES && (await cache.has(instanceName)));
+    }
+
+    if (exists) {
+      return true;
+    }
 
     if (cacheConf.REDIS.ENABLED && cacheConf.REDIS.SAVE_INSTANCES) {
       const keyExists = await cache.has(instanceName);
-
-      if (exists || keyExists) {
+      if (keyExists) {
         return true;
       }
-
-      const rows = await prismaRepository.instance.findMany({ where: { name: instanceName } });
-      return rows.length > 0;
     }
 
-    return exists || (await prismaRepository.instance.findMany({ where: { name: instanceName } })).length > 0;
+    const row = await prismaRepository.instance.findFirst({ where: { name: instanceName } });
+    return !!row;
   } catch (error) {
     throw new InternalServerErrorException(error?.toString());
   }
@@ -37,7 +42,7 @@ export async function instanceExistsGuard(req: Request, _: Response, next: NextF
     throw new BadRequestException('"instanceName" not provided.');
   }
 
-  if (!(await getInstance(param.instanceName))) {
+  if (!(await getInstance(param.instanceName, req.get('apikey')))) {
     throw new NotFoundException(`The "${param.instanceName}" instance does not exist`);
   }
 
