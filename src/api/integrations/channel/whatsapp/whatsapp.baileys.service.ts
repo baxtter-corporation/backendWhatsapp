@@ -435,10 +435,42 @@ export class BaileysStartupService extends ChannelStartupService {
 
     if (connection === 'close') {
       const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
-      const codesToNotReconnect = [DisconnectReason.loggedOut, DisconnectReason.forbidden, 402, 406];
+      const codesToNotReconnect = [DisconnectReason.loggedOut, DisconnectReason.forbidden, 402, 406, 440];
       const shouldReconnect = !codesToNotReconnect.includes(statusCode);
 
       if (shouldReconnect) {
+        // If conflict replaced (440), clear session and don't reconnect
+        if (statusCode === 440) {
+          this.logger.warn({
+            action: 'session.conflict',
+            instance: this.instance.name,
+            message: 'Session replaced by another connection, clearing session',
+          });
+
+          await this.logoutInstance();
+
+          this.sendDataWebhook(Events.STATUS_INSTANCE, {
+            instance: this.instance.name,
+            status: 'closed',
+            disconnectionAt: new Date(),
+            disconnectionReasonCode: statusCode,
+            disconnectionObject: JSON.stringify(lastDisconnect),
+          });
+
+          await this.prismaRepository.instance.update({
+            where: { id: this.instanceId },
+            data: {
+              connectionStatus: 'close',
+              disconnectionAt: new Date(),
+              disconnectionReasonCode: statusCode,
+              disconnectionObject: JSON.stringify(lastDisconnect),
+            },
+          });
+
+          this.eventEmitter.emit('logout.instance', this.instance.name, 'inner');
+          return;
+        }
+
         // Increment reconnect attempts and apply exponential backoff to avoid churn
         this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
         if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
@@ -715,7 +747,7 @@ export class BaileysStartupService extends ChannelStartupService {
       markOnlineOnConnect: this.localSettings.alwaysOnline,
       retryRequestDelayMs: 350,
       maxMsgRetryCount: 4,
-      fireInitQueries: true,
+      fireInitQueries: false,
       connectTimeoutMs: 30_000,
       keepAliveIntervalMs: 30_000,
       qrTimeout: 45_000,
@@ -4745,8 +4777,8 @@ export class BaileysStartupService extends ChannelStartupService {
       source: getDevice(message.key.id),
     };
 
-    if (!messageRaw.status && message.key.fromMe === false) {
-      messageRaw.status = status[3]; // DELIVERED MESSAGE
+    if (!messageRaw.status) {
+      messageRaw.status = message.key.fromMe ? status[1] : status[3];
     }
 
     if (messageRaw.message.extendedTextMessage) {

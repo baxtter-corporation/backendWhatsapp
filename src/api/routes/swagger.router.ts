@@ -83,9 +83,9 @@ function buildOpenApi(models: any[]) {
     // override Instance request body payload documentation
     if (name === 'Instance') {
       Object.assign(exampleObj, {
-        instanceName: 'Advance',
+        instanceName: 'Advancef',
         integration: 'WHATSAPP-BAILEYS',
-        token: 'advance',
+        token: 'advancef',
         qrcode: true,
       });
 
@@ -96,6 +96,12 @@ function buildOpenApi(models: any[]) {
         token: { type: 'string' },
         qrcode: { type: 'boolean' },
       });
+
+      for (const key of Object.keys(schemaProps)) {
+        if (!['instanceName', 'integration', 'token', 'qrcode'].includes(key)) {
+          delete schemaProps[key];
+        }
+      }
     }
 
     // do not attach `example` to components.schemas to avoid showing examples on GET responses
