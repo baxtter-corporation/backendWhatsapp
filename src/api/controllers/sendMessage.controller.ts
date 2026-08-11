@@ -75,7 +75,6 @@ export class SendMessageController {
     }
 
     const state = instance.connectionStatus?.state;
-    const needsConnect = !instance.client && typeof instance.connectToWhatsapp === 'function';
     const isConnecting = state === 'connecting';
     const waitTimeout = isConnecting ? 30000 : 15000;
 
@@ -93,7 +92,9 @@ export class SendMessageController {
           throw new BadRequestException(`The "${instanceName}" instance is not connected`);
         }
       } else {
-        this.logger.warn(`Instance "${instanceName}" is not ready and has no connectToWhatsapp function (state=${state})`);
+        this.logger.warn(
+          `Instance "${instanceName}" is not ready and has no connectToWhatsapp function (state=${state})`,
+        );
         throw new BadRequestException(`The "${instanceName}" instance is not connected`);
       }
     }
