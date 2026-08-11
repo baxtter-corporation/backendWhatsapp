@@ -5223,26 +5223,52 @@ export class BaileysStartupService extends ChannelStartupService {
       if (!message.pushName) {
         if (messageKey.fromMe) {
           message.pushName = 'Você';
-        } else if (message.contextInfo) {
-          const contextInfo = message.contextInfo as { participant?: string };
-          if (contextInfo.participant) {
-            message.pushName = contextInfo.participant.split('@')[0];
-          } else if (messageKey.participant) {
-            message.pushName = messageKey.participant.split('@')[0];
-          }
         }
       }
 
       return message;
     });
 
-    return {
-      messages: {
-        total: count,
-        pages: Math.ceil(count / query.offset),
-        currentPage: query.page,
-        records: formattedMessages,
+    return { messages: formattedMessages, count };
+  }
+
+  public async findMessagesByRemoteJid(remoteJid: string) {
+    const messages = await this.prismaRepository.message.findMany({
+      where: {
+        instanceId: this.instanceId,
+        key: {
+          path: ['remoteJid'],
+          equals: remoteJid,
+        },
+        messageType: 'contactMessage',
       },
-    };
+      orderBy: { messageTimestamp: 'desc' },
+      include: {
+        MessageUpdate: true,
+        Media: true,
+        Instance: {
+          select: {
+            id: true,
+            name: true,
+            profileName: true,
+            number: true,
+          },
+        },
+      },
+    });
+
+    const formattedMessages = messages.map((message) => {
+      const messageKey = message.key as { fromMe: boolean; remoteJid: string; id: string; participant?: string };
+
+      if (!message.pushName) {
+        if (messageKey.fromMe) {
+          message.pushName = 'Você';
+        }
+      }
+
+      return message;
+    });
+
+    return { messages: formattedMessages, count: messages.length };
   }
 }

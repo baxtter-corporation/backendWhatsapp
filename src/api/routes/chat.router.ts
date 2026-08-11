@@ -201,6 +201,16 @@ export class ChatRouter extends RouterBroker {
 
         return res.status(HttpStatus.OK).json(response);
       })
+      .get(this.routerPath('findMessagesByRemoteJid'), ...guards, async (req, res) => {
+        const instance = req.params as unknown as InstanceDto;
+        const { number } = req.query as unknown as { number: string };
+        if (!number) {
+          return res.status(HttpStatus.BAD_REQUEST).json({ error: 'number is a required query parameter' });
+        }
+        const response = await chatController.findMessagesByRemoteJid(instance, number);
+
+        return res.status(HttpStatus.OK).json(response);
+      })
       // Profile routes
       .post(this.routerPath('fetchBusinessProfile'), ...guards, async (req, res) => {
         const response = await this.dataValidate<ProfilePictureDto>({

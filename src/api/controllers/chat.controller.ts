@@ -113,4 +113,24 @@ export class ChatController {
   public async blockUser({ instanceName }: InstanceDto, data: BlockUserDto) {
     return await this.waMonitor.waInstances[instanceName].blockUser(data);
   }
+
+  public async findMessagesByRemoteJid({ instanceName }: InstanceDto, number: string) {
+    try {
+      let instance = this.waMonitor.waInstances[instanceName];
+      if (!instance) {
+        instance = await this.waMonitor.loadInstanceByName(instanceName, false);
+      }
+
+      if (!instance) {
+        throw new Error(`Instance "${instanceName}" not found`);
+      }
+
+      // Convert number to remoteJid format if needed
+      const remoteJid = number.includes('@') ? number : `${number}@s.whatsapp.net`;
+      return await instance.findMessagesByRemoteJid(remoteJid);
+    } catch (error) {
+      console.error('Error in findMessagesByRemoteJid:', error);
+      throw error;
+    }
+  }
 }

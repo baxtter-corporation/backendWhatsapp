@@ -301,6 +301,58 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
     },
   };
 
+  // findMessagesByRemoteJid
+  msgPaths['/chat/findMessagesByRemoteJid/{instanceName}'] = {
+    get: {
+      tags: ['Chat'],
+      summary: 'Find contact messages by phone number',
+      operationId: 'findMessagesByRemoteJid',
+      parameters: [
+        instanceParam,
+        {
+          name: 'number',
+          in: 'query',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Phone number (e.g., 5511999999999 or 5511999999999@s.whatsapp.net)',
+        },
+      ],
+      security: [{ ApiKeyAuth: [] }],
+      responses: {
+        '200': {
+          description: 'OK - Returns only messages with messageType == contactMessage',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  messages: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        key: { type: 'object' },
+                        pushName: { type: 'string' },
+                        messageType: { type: 'string' },
+                        message: { type: 'object' },
+                        messageTimestamp: { type: 'integer' },
+                        MessageUpdate: { type: 'array', items: { type: 'object' } },
+                        Media: { type: 'object', nullable: true },
+                        Instance: { type: 'object' },
+                      },
+                    },
+                  },
+                  count: { type: 'integer' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
   // merge message paths into spec.paths
   spec.paths = { ...(spec.paths || {}), ...msgPaths };
   res.json(spec);
