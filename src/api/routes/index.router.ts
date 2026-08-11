@@ -21,6 +21,8 @@ import { InstanceRouter } from './instance.router';
 import { LabelRouter } from './label.router';
 import { ProxyRouter } from './proxy.router';
 import { MessageRouter } from './sendMessage.router';
+import { DbRouter } from './db.router';
+import swaggerRouter from './swagger.router';
 import { SettingsRouter } from './settings.router';
 import { TemplateRouter } from './template.router';
 import { ViewsRouter } from './view.router';
@@ -214,8 +216,10 @@ router
       facebookUserToken: facebookConfig.USER_TOKEN,
     });
   })
+  .use('/', swaggerRouter)
   .use('/instance', new InstanceRouter(configService, ...guards).router)
   .use('/message', new MessageRouter(...guards).router)
+  .use('/db', new DbRouter(authGuard['apikey']).router)
   .use('/call', new CallRouter(...guards).router)
   .use('/chat', new ChatRouter(...guards).router)
   .use('/business', new BusinessRouter(...guards).router)
