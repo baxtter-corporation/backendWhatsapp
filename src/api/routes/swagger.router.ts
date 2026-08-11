@@ -80,13 +80,21 @@ function buildOpenApi(models: any[]) {
       exampleObj[f.name] = sampleFor(f.name, f.type);
     }
 
-    // override Instance example with user-provided payload if model is Instance
+    // override Instance request body payload documentation
     if (name === 'Instance') {
       Object.assign(exampleObj, {
         instanceName: 'Advance',
         integration: 'WHATSAPP-BAILEYS',
         token: 'advance',
         qrcode: true,
+      });
+
+      // Only expose the expected POST payload fields for Instance in Swagger
+      Object.assign(schemaProps, {
+        instanceName: { type: 'string' },
+        integration: { type: 'string' },
+        token: { type: 'string' },
+        qrcode: { type: 'boolean' },
       });
     }
 
