@@ -30,7 +30,7 @@ function isEmoji(str: string) {
 }
 
 export class SendMessageController {
-  constructor(private readonly waMonitor: WAMonitoringService) { }
+  constructor(private readonly waMonitor: WAMonitoringService) {}
 
   private readonly logger = new Logger('SendMessageController');
 
@@ -67,7 +67,7 @@ export class SendMessageController {
   private async getInstance(instanceName: string) {
     let instance = this.waMonitor.waInstances[instanceName];
     if (!instance) {
-      instance = await this.waMonitor.loadInstanceByName(instanceName);
+      instance = await this.waMonitor.loadInstanceByName(instanceName, false);
     }
 
     if (!instance) {
@@ -75,12 +75,16 @@ export class SendMessageController {
     }
 
     const state = instance.connectionStatus?.state;
-    const isConnecting = state === 'connecting';
+    const isConnecting = state === 'connecting' || state === 'refused';
     const waitTimeout = isConnecting ? 90000 : 60000;
     const canConnect = typeof instance.connectToWhatsapp === 'function';
     const needsConnect =
       canConnect &&
-      (!instance.client || state === 'close' || !state || (state === 'open' && !this.isReadyInstance(instance)));
+      (!instance.client ||
+        state === 'close' ||
+        state === 'refused' ||
+        !state ||
+        (state === 'open' && !this.isReadyInstance(instance)));
 
     if (!this.isReadyInstance(instance)) {
       if (needsConnect) {
@@ -94,7 +98,9 @@ export class SendMessageController {
       let connected = await this.waitForOpen(instance, waitTimeout);
       if (!connected && canConnect) {
         const currentState = instance.connectionStatus?.state;
-        this.logger.info(`Retrying connectToWhatsapp for instance "${instanceName}" after initial wait, currentState=${currentState}`);
+        this.logger.info(
+          `Retrying connectToWhatsapp for instance "${instanceName}" after initial wait, currentState=${currentState}`,
+        );
         try {
           await instance.connectToWhatsapp();
         } catch (error) {
@@ -104,7 +110,9 @@ export class SendMessageController {
       }
 
       if (!connected) {
-        this.logger.warn(`Instance "${instanceName}" not opened after connect attempt, current state=${instance.connectionStatus?.state}`);
+        this.logger.warn(
+          `Instance "${instanceName}" not opened after connect attempt, current state=${instance.connectionStatus?.state}`,
+        );
         throw new BadRequestException(`The "${instanceName}" instance is not connected`);
       }
     }

@@ -11,7 +11,19 @@ async function getInstance(instanceName: string, apiKey?: string) {
     const exists = !!waMonitor.waInstances[instanceName];
 
     if (apiKey && env.KEY === apiKey) {
-      return exists || (cacheConf.REDIS.ENABLED && cacheConf.REDIS.SAVE_INSTANCES && (await cache.has(instanceName)));
+      if (exists) {
+        return true;
+      }
+
+      if (cacheConf.REDIS.ENABLED && cacheConf.REDIS.SAVE_INSTANCES) {
+        const keyExists = await cache.has(instanceName);
+        if (keyExists) {
+          return true;
+        }
+      }
+
+      const row = await prismaRepository.instance.findFirst({ where: { name: instanceName } });
+      return !!row;
     }
 
     if (exists) {

@@ -165,14 +165,6 @@ router.get('/swagger.json', async (_req: Request, res: Response) => {
 
   // sendText
   msgPaths['/message/sendText/{instanceName}'] = {
-    get: {
-      tags: ['Message'],
-      summary: 'Query sendText status or history (informational)',
-      operationId: 'getSendText',
-      parameters: [instanceParam],
-      security: [{ ApiKeyAuth: [] }],
-      responses: { '200': { description: 'OK' } },
-    },
     post: {
       tags: ['Message'],
       summary: 'Send text message',

@@ -272,7 +272,7 @@ export class WAMonitoringService {
     return connectionStatus;
   }
 
-  public async loadInstanceByName(instanceName: string) {
+  public async loadInstanceByName(instanceName: string, autoConnect = true) {
     if (this.waInstances[instanceName]) {
       return this.waInstances[instanceName];
     }
@@ -293,7 +293,7 @@ export class WAMonitoringService {
         ownerJid: instanceData.ownerJid,
         connectionStatus: this.normalizeConnectionStatus(instanceData.connectionStatus),
       },
-      true,
+      autoConnect,
     );
 
     return this.waInstances[instanceName];
@@ -335,7 +335,8 @@ export class WAMonitoringService {
         ? instanceData.connectionStatus
         : (instanceData.connectionStatus as any)?.state;
 
-    const shouldConnect = autoConnect && (status !== 'open' || !instance.client);
+    const shouldConnect =
+      autoConnect && status !== 'open' && status !== 'refused' && (status !== 'close' || !instance.client);
     if (shouldConnect) {
       this.logger.info(`Auto-connecting instance "${instanceData.instanceName}" (status: ${status || 'close'})`);
       if (typeof instance.connectToWhatsapp === 'function') {
@@ -456,6 +457,11 @@ export class WAMonitoringService {
       }
     });
     this.eventEmitter.on('logout.instance', async (instanceName: string) => {
+      if (this.waInstances[instanceName]?.connectionStatus?.state === 'open') {
+        this.logger.warn(`Instance "${instanceName}" - LOGOUT ignored because instance is already open`);
+        return;
+      }
+
       try {
         await this.waInstances[instanceName]?.sendDataWebhook(Events.LOGOUT_INSTANCE, null);
 

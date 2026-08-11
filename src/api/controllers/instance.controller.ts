@@ -323,7 +323,7 @@ export class InstanceController {
         return instance.qrCode;
       }
 
-      if (state == 'close') {
+      if (state == 'close' || state == 'refused') {
         await instance.connectToWhatsapp(number);
 
         await delay(2000);

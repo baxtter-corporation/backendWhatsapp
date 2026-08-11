@@ -1,5 +1,5 @@
 import { InstanceDto } from '@api/dto/instance.dto';
-import { prismaRepository } from '@api/server.module';
+import { prismaRepository, waMonitor } from '@api/server.module';
 import { Auth, configService, Database } from '@config/env.config';
 import { Logger } from '@config/logger.config';
 import { ForbiddenException, UnauthorizedException } from '@exceptions';
@@ -23,14 +23,20 @@ async function apikey(req: Request, _: Response, next: NextFunction) {
   if ((req.originalUrl.includes('/instance/create') || req.originalUrl.includes('/instance/fetchInstances')) && !key) {
     throw new ForbiddenException('Missing global api key', 'The global api key must be set');
   }
+
   const param = req.params as unknown as InstanceDto;
+  const instanceByName = param?.instanceName ? waMonitor.waInstances[param.instanceName] : null;
 
   try {
+    if (instanceByName && instanceByName.token === key) {
+      return next();
+    }
+
     if (param?.instanceName) {
       const instance = await prismaRepository.instance.findUnique({
         where: { name: param.instanceName },
       });
-      if (instance.token === key) {
+      if (instance?.token === key) {
         return next();
       }
     } else {
