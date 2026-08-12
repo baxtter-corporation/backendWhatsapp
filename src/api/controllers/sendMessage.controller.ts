@@ -15,7 +15,6 @@ import {
   SendTextDto,
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
-import { Logger } from '@config/logger.config';
 import { BadRequestException } from '@exceptions';
 import { isBase64, isURL } from 'class-validator';
 import emojiRegex from 'emoji-regex';
@@ -32,38 +31,6 @@ function isEmoji(str: string) {
 export class SendMessageController {
   constructor(private readonly waMonitor: WAMonitoringService) {}
 
-  private readonly logger = new Logger('SendMessageController');
-
-  private isReadyInstance(instance: any) {
-    if (!instance || !instance.client) {
-      return false;
-    }
-
-    const state = instance.connectionStatus?.state;
-    if (state === 'open') {
-      return true;
-    }
-
-    return instance.client?.ws?.readyState === 1;
-  }
-
-  private async waitForOpen(instance: any, timeoutMs: number) {
-    return await new Promise<boolean>((resolve) => {
-      const timeout = setTimeout(() => {
-        clearInterval(interval);
-        resolve(false);
-      }, timeoutMs);
-
-      const interval = setInterval(() => {
-        if (this.isReadyInstance(instance)) {
-          clearTimeout(timeout);
-          clearInterval(interval);
-          resolve(true);
-        }
-      }, 500);
-    });
-  }
-
   private async getInstance(instanceName: string) {
     let instance = this.waMonitor.waInstances[instanceName];
     if (!instance) {
@@ -72,49 +39,6 @@ export class SendMessageController {
 
     if (!instance) {
       throw new BadRequestException(`The "${instanceName}" instance is not connected`);
-    }
-
-    const state = instance.connectionStatus?.state;
-    const isConnecting = state === 'connecting' || state === 'refused';
-    const waitTimeout = isConnecting ? 90000 : 60000;
-    const canConnect = typeof instance.connectToWhatsapp === 'function';
-    const needsConnect =
-      canConnect &&
-      (!instance.client ||
-        state === 'close' ||
-        state === 'refused' ||
-        !state ||
-        (state === 'open' && !this.isReadyInstance(instance)));
-
-    if (!this.isReadyInstance(instance)) {
-      if (needsConnect) {
-        try {
-          await instance.connectToWhatsapp();
-        } catch (error) {
-          this.logger.warn(`Instance "${instanceName}" connectToWhatsapp failed: ${error?.message ?? error}`);
-        }
-      }
-
-      let connected = await this.waitForOpen(instance, waitTimeout);
-      if (!connected && canConnect) {
-        const currentState = instance.connectionStatus?.state;
-        this.logger.info(
-          `Retrying connectToWhatsapp for instance "${instanceName}" after initial wait, currentState=${currentState}`,
-        );
-        try {
-          await instance.connectToWhatsapp();
-        } catch (error) {
-          this.logger.warn(`Instance "${instanceName}" retry connectToWhatsapp failed: ${error?.message ?? error}`);
-        }
-        connected = await this.waitForOpen(instance, waitTimeout);
-      }
-
-      if (!connected) {
-        this.logger.warn(
-          `Instance "${instanceName}" not opened after connect attempt, current state=${instance.connectionStatus?.state}`,
-        );
-        throw new BadRequestException(`The "${instanceName}" instance is not connected`);
-      }
     }
 
     return instance;
