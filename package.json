@@ -1,5 +1,5 @@
 {
-  "name": "evolution-api",
+  "name": "advance-message",
   "version": "2.3.7",
   "description": "Rest api for communication with WhatsApp",
   "main": "./dist/main.js",

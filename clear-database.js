@@ -1,6 +1,32 @@
 const { PrismaClient } = require('@prisma/client');
+const { createClient } = require('redis');
 
 const prisma = new PrismaClient();
+
+async function clearRedis() {
+  try {
+    const redis = createClient({
+      url: process.env.REDIS_URI || 'redis://localhost:6379'
+    });
+
+    await redis.connect();
+    console.log('Conectado ao Redis');
+
+    // Limpar todas as chaves relacionadas ao Evolution API
+    const keys = await redis.keys('evolution:*');
+    if (keys.length > 0) {
+      await redis.del(keys);
+      console.log(`✓ ${keys.length} chaves do Redis removidas`);
+    } else {
+      console.log('✓ Nenhuma chave do Evolution API encontrada no Redis');
+    }
+
+    await redis.disconnect();
+  } catch (error) {
+    console.error('Erro ao limpar Redis:', error.message);
+    console.log('⚠ Redis não foi limpo (pode não estar configurado ou inacessível)');
+  }
+}
 
 async function truncateDatabase() {
   try {
@@ -74,6 +100,12 @@ async function truncateDatabase() {
     console.log('✓ Instance truncado');
 
     console.log('\n✅ Banco de dados truncado completamente!');
+
+    // Limpar Redis após truncar banco
+    console.log('\nLimpando Redis...');
+    await clearRedis();
+
+    console.log('\n✅ Banco de dados e Redis limpos completamente!');
   } catch (error) {
     console.error('Erro durante TRUNCATE:', error);
   } finally {

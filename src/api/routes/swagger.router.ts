@@ -147,7 +147,7 @@ function buildOpenApi(models: any[]) {
 
   const spec = {
     openapi: '3.0.0',
-    info: { title: 'Evolution API - DB Access', version: '1.0.0' },
+    info: { title: 'Advance Message - DB Access', version: '1.0.0' },
     servers: [{ url: '/' }],
     paths,
     tags: models.map((m: any) => ({ name: m.name, description: `${m.name} entity operations` })),

@@ -76,7 +76,7 @@ const metricsBasicAuth = (req: Request, res: Response, next: NextFunction) => {
 
   const auth = req.get('Authorization');
   if (!auth || !auth.startsWith('Basic ')) {
-    res.set('WWW-Authenticate', 'Basic realm="Evolution API Metrics"');
+    res.set('WWW-Authenticate', 'Basic realm="Advance Message Metrics"');
     return res.status(401).send('Authentication required');
   }
 
@@ -198,7 +198,7 @@ router
   .get('/', async (req, res) => {
     res.status(HttpStatus.OK).json({
       status: HttpStatus.OK,
-      message: 'Welcome to the Evolution API, it is working!',
+      message: 'Welcome to the Advance Message, it is working!',
       version: packageJson.version,
       clientName: databaseConfig.CONNECTION.CLIENT_NAME,
       manager: !serverConfig.DISABLE_MANAGER ? `${req.protocol}://${req.get('host')}/manager` : undefined,
