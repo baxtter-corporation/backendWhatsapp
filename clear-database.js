@@ -2,83 +2,83 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-async function clearDatabase() {
+async function truncateDatabase() {
   try {
-    console.log('Iniciando limpeza completa do banco de dados...');
+    console.log('Iniciando TRUNCATE do banco de dados...');
 
-    // Deletar em ordem de dependência (filhos antes dos pais)
-    await prisma.messageUpdate.deleteMany();
-    console.log('✓ MessageUpdate deletados');
+    // TRUNCATE em ordem de dependência (filhos antes dos pais)
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "MessageUpdate" CASCADE');
+    console.log('✓ MessageUpdate truncado');
 
-    await prisma.message.deleteMany();
-    console.log('✓ Messages deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Message" CASCADE');
+    console.log('✓ Message truncado');
 
-    await prisma.media.deleteMany();
-    console.log('✓ Media deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Media" CASCADE');
+    console.log('✓ Media truncado');
 
-    await prisma.chat.deleteMany();
-    console.log('✓ Chats deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Chat" CASCADE');
+    console.log('✓ Chat truncado');
 
-    await prisma.contact.deleteMany();
-    console.log('✓ Contacts deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Contact" CASCADE');
+    console.log('✓ Contact truncado');
 
-    await prisma.label.deleteMany();
-    console.log('✓ Labels deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Label" CASCADE');
+    console.log('✓ Label truncado');
 
-    await prisma.typebot.deleteMany();
-    console.log('✓ Typebots deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Typebot" CASCADE');
+    console.log('✓ Typebot truncado');
 
-    await prisma.openaiCreds.deleteMany();
-    console.log('✓ OpenaiCreds deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "OpenaiCreds" CASCADE');
+    console.log('✓ OpenaiCreds truncado');
 
-    await prisma.openaiBot.deleteMany();
-    console.log('✓ OpenaiBots deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "OpenaiBot" CASCADE');
+    console.log('✓ OpenaiBot truncado');
 
-    await prisma.webhook.deleteMany();
-    console.log('✓ Webhooks deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Webhook" CASCADE');
+    console.log('✓ Webhook truncado');
 
-    await prisma.chatwoot.deleteMany();
-    console.log('✓ Chatwoot deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Chatwoot" CASCADE');
+    console.log('✓ Chatwoot truncado');
 
-    await prisma.proxy.deleteMany();
-    console.log('✓ Proxies deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Proxy" CASCADE');
+    console.log('✓ Proxy truncado');
 
-    await prisma.setting.deleteMany();
-    console.log('✓ Settings deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Setting" CASCADE');
+    console.log('✓ Setting truncado');
 
-    await prisma.rabbitmq.deleteMany();
-    console.log('✓ Rabbitmq deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Rabbitmq" CASCADE');
+    console.log('✓ Rabbitmq truncado');
 
-    await prisma.nats.deleteMany();
-    console.log('✓ Nats deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Nats" CASCADE');
+    console.log('✓ Nats truncado');
 
-    await prisma.sqs.deleteMany();
-    console.log('✓ Sqs deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Sqs" CASCADE');
+    console.log('✓ Sqs truncado');
 
-    await prisma.kafka.deleteMany();
-    console.log('✓ Kafka deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Kafka" CASCADE');
+    console.log('✓ Kafka truncado');
 
-    await prisma.websocket.deleteMany();
-    console.log('✓ Websockets deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Websocket" CASCADE');
+    console.log('✓ Websocket truncado');
 
-    await prisma.typebotSetting.deleteMany();
-    console.log('✓ TypebotSettings deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "TypebotSetting" CASCADE');
+    console.log('✓ TypebotSetting truncado');
 
-    await prisma.openaiSetting.deleteMany();
-    console.log('✓ OpenaiSettings deletados');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "OpenaiSetting" CASCADE');
+    console.log('✓ OpenaiSetting truncado');
 
-    await prisma.session.deleteMany();
-    console.log('✓ Sessions deletadas');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Session" CASCADE');
+    console.log('✓ Session truncado');
 
-    await prisma.instance.deleteMany();
-    console.log('✓ Instances deletadas');
+    await prisma.$executeRawUnsafe('TRUNCATE TABLE "Instance" CASCADE');
+    console.log('✓ Instance truncado');
 
-    console.log('\n✅ Banco de dados limpo completamente!');
+    console.log('\n✅ Banco de dados truncado completamente!');
   } catch (error) {
-    console.error('Erro durante limpeza:', error);
+    console.error('Erro durante TRUNCATE:', error);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-clearDatabase();
+truncateDatabase();

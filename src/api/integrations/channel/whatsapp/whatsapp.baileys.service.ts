@@ -5240,6 +5240,8 @@ export class BaileysStartupService extends ChannelStartupService {
   }
 
   public async findMessagesByRemoteJid(remoteJid: string) {
+    this.logger.info(`Searching messages for remoteJid: ${remoteJid}, instanceId: ${this.instanceId}`);
+
     const messages = await this.prismaRepository.message.findMany({
       where: {
         instanceId: this.instanceId,
@@ -5247,7 +5249,6 @@ export class BaileysStartupService extends ChannelStartupService {
           path: ['remoteJid'],
           equals: remoteJid,
         },
-        messageType: 'contactMessage',
       },
       orderBy: { messageTimestamp: 'desc' },
       include: {
@@ -5264,7 +5265,13 @@ export class BaileysStartupService extends ChannelStartupService {
       },
     });
 
-    const formattedMessages = messages.map((message) => {
+    this.logger.info(`Found ${messages.length} messages total`);
+
+    // Filter for contactMessage in memory
+    const contactMessages = messages.filter((msg) => msg.messageType === 'contactMessage');
+    this.logger.info(`Found ${contactMessages.length} contactMessage messages`);
+
+    const formattedMessages = contactMessages.map((message) => {
       const messageKey = message.key as { fromMe: boolean; remoteJid: string; id: string; participant?: string };
 
       if (!message.pushName) {
@@ -5276,6 +5283,6 @@ export class BaileysStartupService extends ChannelStartupService {
       return message;
     });
 
-    return { messages: formattedMessages, count: messages.length };
+    return { messages: formattedMessages, count: formattedMessages.length };
   }
 }
